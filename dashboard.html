@@ -143,20 +143,36 @@
             </div>
 
             <div id="tab-profile" class="tab-window">
-                <div class="glass-panel" style="max-width:600px;">
-                    <h3 style="font-size:17px; font-weight:800; border-bottom:1px solid var(--border-glow); padding-bottom:12px; margin-bottom:20px;">Operator Verification Node</h3>
-                    <form onsubmit="updateOperatorProfileMatrix(event)">
-                        <div class="input-block">
-                            <label>Assigned Lead Operator Signature</label>
-                            <input type="text" id="field-op-name" required>
-                        </div>
-                        <div class="input-block">
-                            <label>Secure Network Link (Email)</label>
-                            <input type="email" id="field-op-email" required>
-                        </div>
-                        <button type="submit" class="action-btn" style="font-size:13px; padding:11px 24px;">Synchronize Operator Records</button>
-                    </form>
-                </div>
+                <h3 style="font-size:17px; font-weight:800; border-bottom:1px solid var(--border-glow); padding-bottom:12px; margin-bottom:20px;">Operator Verification Node</h3>
+<form onsubmit="updateOperatorProfileMatrix(event)">
+    <div class="input-block">
+        <label>Assigned Lead Operator Signature</label>
+        <input type="text" id="field-op-name" required>
+    </div>
+    <div class="input-block">
+        <label>Secure Network Link (Email)</label>
+        <input type="email" id="field-op-email" required>
+    </div>
+    <!-- NEW CONFIGURATION FIELDS START HERE -->
+    <div class="input-block">
+        <label>Communications Contact (Phone)</label>
+        <input type="tel" id="field-op-phone" placeholder="+1 (555) 000-0000">
+    </div>
+    <div class="input-block">
+        <label>Chronological Birth Matrix (DOB)</label>
+        <input type="date" id="field-op-dob" onchange="calculateOperatorAge(this.value)">
+    </div>
+    <div class="input-block">
+        <label>Calculated System Age</label>
+        <input type="number" id="field-op-age" readonly style="background: rgba(255,255,255,0.02); color: var(--text-muted); cursor: not-allowed;">
+    </div>
+    <div class="input-block">
+        <label>Professional Classification</label>
+        <input type="text" id="field-op-profession" placeholder="Systems Engineer / Student">
+    </div>
+    <!-- NEW CONFIGURATION FIELDS END HERE -->
+    <button type="submit" class="action-btn" style="font-size:13px; padding:11px 24px;">Synchronize Operator Records</button>
+</form>
             </div>
 
         </div>
@@ -164,120 +180,64 @@
 
     <!-- UTILITY APPLICATION JAVASCRIPT LOGIC -->
     <script>
-        let globalChartPipeInstance = null;
-        let activeTimeWindowFilter = 'all';
+        // Upgraded Architectural Seeds containing your added profile tracks
+const databaseSeedTemplates = {
+    profile: { 
+        name: "System Examiner Node", 
+        email: "student@college.edu",
+        phone: "",
+        dob: "",
+        age: "",
+        profession: "Academic Examiner"
+    },
+    ledger: [
+        { id: 301, date: "2026-07-18", desc: "Technical Project Stipend", category: "Stipend", type: "income", amount: 2800.00 },
+        { id: 302, date: "2026-07-16", desc: "Main Campus Facility Housing", category: "Rent", type: "expense", amount: 550.00 },
+        { id: 303, date: "2026-07-14", desc: "Optical Grid Data Infrastructure", category: "Rent", type: "expense", amount: 120.00 },
+        { id: 304, date: "2026-07-10", desc: "Lab Team Subsistence Nutrition", category: "Food", type: "expense", amount: 48.50 }
+    ]
+};
 
-        const databaseSeedTemplates = {
-            profile: { name: "System Examiner Node", email: "student@college.edu" },
-            ledger: [
-                { id: 301, date: "2026-07-18", desc: "Technical Project Stipend", category: "Stipend", type: "income", amount: 2800.00 },
-                { id: 302, date: "2026-07-16", desc: "Main Campus Facility Housing", category: "Rent", type: "expense", amount: 550.00 },
-                { id: 303, date: "2026-07-14", desc: "Optical Grid Data Infrastructure", category: "Rent", type: "expense", amount: 120.00 },
-                { id: 304, date: "2026-07-10", desc: "Lab Team Subsistence Nutrition", category: "Food", type: "expense", amount: 48.50 }
-            ]
-        };
+// Automatic computation logic mapping birth schedules directly to mathematical ages
+function calculateOperatorAge(dobValue) {
+    if (!dobValue) return;
+    const birthday = new Date(dobValue);
+    const today = new Date();
+    let age = today.getFullYear() - birthday.getFullYear();
+    const m = today.getMonth() - birthday.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthday.getDate())) {
+        age--;
+    }
+    document.getElementById('field-op-age').value = age;
+}
 
-        let volatileSystemMemory = JSON.parse(localStorage.getItem('isolated_cyber_vault')) || databaseSeedTemplates;
+// Synchronize all newly declared inputs to localized persistence storage registers
+function updateOperatorProfileMatrix(e) {
+    e.preventDefault();
+    volatileSystemMemory.profile.name = document.getElementById('field-op-name').value;
+    volatileSystemMemory.profile.email = document.getElementById('field-op-email').value;
+    volatileSystemMemory.profile.phone = document.getElementById('field-op-phone').value;
+    volatileSystemMemory.profile.dob = document.getElementById('field-op-dob').value;
+    volatileSystemMemory.profile.age = document.getElementById('field-op-age').value;
+    volatileSystemMemory.profile.profession = document.getElementById('field-op-profession').value;
+    
+    updateCacheMemoryPipeline();
+    alert("Advanced profile parameters successfully synchronized inside storage cluster.");
+}
 
-        function updateCacheMemoryPipeline() { localStorage.setItem('isolated_cyber_vault', JSON.stringify(volatileSystemMemory)); }
-        function executeLogoutRedirect() { window.location.href = "index.html"; }
-
-        function toggleTabPanel(tabWindowId) {
-            document.getElementById('tab-dashboard').style.display = 'none';
-            document.getElementById('tab-profile').style.display = 'none';
-            document.getElementById(`tab-${tabWindowId}`).style.display = 'block';
-            if (tabWindowId === 'dashboard') computeAndRenderFinancialMetrics();
-        }
-
-        function setTimelineFilterMode(windowMode) {
-            activeTimeWindowFilter = windowMode;
-            document.querySelectorAll('.range-btn').forEach(btn => btn.style.background = 'transparent');
-            document.getElementById(`range-${windowMode}`).style.background = 'var(--neon-blue)';
-            computeAndRenderFinancialMetrics();
-        }
-
-        function injectRecordIntoLedger(e) {
-            e.preventDefault();
-            volatileSystemMemory.ledger.unshift({
-                id: Date.now(),
-                date: document.getElementById('input-date-val').value,
-                desc: document.getElementById('input-spec-memo').value,
-                category: document.getElementById('input-domain-cat').value,
-                type: document.getElementById('input-flow-dim').value,
-                amount: parseFloat(document.getElementById('input-asset-val').value)
-            });
-            updateCacheMemoryPipeline();
-            computeAndRenderFinancialMetrics();
-            document.getElementById('input-asset-val').value = '';
-            document.getElementById('input-spec-memo').value = '';
-        }
-
-        function computeAndRenderFinancialMetrics() {
-            let runningSumInflow = 0, runningSumOutflow = 0;
-            let allocationGraphDataMap = { Food: 0, Rent: 0, Transport: 0, Leisure: 0, Stipend: 0 };
-            const displayTableContainer = document.getElementById('table-body-injector');
-            displayTableContainer.innerHTML = '';
-
-            volatileSystemMemory.ledger.forEach(record => {
-                const checkDateObj = new Date(record.date);
-                let insideTimelineFrame = true;
-                if (activeTimeWindowFilter === 'weekly') {
-                    const limit = new Date(); limit.setDate(new Date().getDate() - 7);
-                    insideTimelineFrame = (checkDateObj >= limit);
-                } else if (activeTimeWindowFilter === 'monthly') {
-                    const limit = new Date(); limit.setMonth(new Date().getMonth() - 1);
-                    insideTimelineFrame = (checkDateObj >= limit);
-                }
-                if (!insideTimelineFrame) return;
-
-                if (record.type === 'income') runningSumInflow += record.amount;
-                else { runningSumOutflow += record.amount; allocationGraphDataMap[record.category] += record.amount; }
-
-                const tableRowElement = document.createElement('tr');
-                tableRowElement.innerHTML = `
-                    <td style="color:var(--neon-cyan); font-family:monospace; font-weight:600;">${record.date}</td>
-                    <td><b>${record.desc}</b></td>
-                    <td><span style="font-size:12px; background:rgba(255,255,255,0.03); padding:4px 8px; border-radius:4px; border:1px solid var(--border-glow);">${record.category}</span></td>
-                    <td><span class="badge ${record.type === 'income' ? 'badge-in' : 'badge-out'}">${record.type}</span></td>
-                    <td style="text-align:right; font-weight:700; color:${record.type === 'income' ? 'var(--neon-green)' : 'var(--text-main)'}">$${record.amount.toFixed(2)}</td>
-                `;
-                displayTableContainer.appendChild(tableRowElement);
-            });
-
-            document.getElementById('txt-inflow-render').innerText = `$${runningSumInflow.toFixed(2)}`;
-            document.getElementById('txt-outflow-render').innerText = `$${runningSumOutflow.toFixed(2)}`;
-            document.getElementById('txt-balance-render').innerText = `$${(runningSumInflow - runningSumOutflow).toFixed(2)}`;
-
-            if (globalChartPipeInstance) globalChartPipeInstance.destroy();
-            globalChartPipeInstance = new Chart(document.getElementById('canvas-chart-engine').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(allocationGraphDataMap),
-                    datasets: [{
-                        label: 'Allocation Outflow ($)',
-                        data: Object.values(allocationGraphDataMap),
-                        backgroundColor: ['#f43f5e', '#3b82f6', '#06b6d4', '#eab308', '#a855f7'],
-                        borderRadius: 5
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-            });
-        }
-
-        function downloadLedgerSpreadsheet() {
-            let csv = ["Date,Description,Category,Flow Type,Amount ($)"];
-            volatileSystemMemory.ledger.forEach(e => csv.push(`"${e.date}","${e.desc}","${e.category}","${e.type}",${e.amount}`));
-            const blob = new Blob([csv.join("\n")], { type: 'text/csv' });
-            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = 'VeloFin_Ledger.csv'; a.click();
-        }
-
-        function wipeDatabaseCacheDefaults() { volatileSystemMemory = databaseSeedTemplates; updateCacheMemoryPipeline(); computeAndRenderFinancialMetrics(); }
-        window.onload = () => {
-            document.getElementById('field-op-name').value = volatileSystemMemory.profile.name;
-            document.getElementById('field-op-email').value = volatileSystemMemory.profile.email;
-            document.getElementById('input-date-val').value = new Date().toISOString().split('T')[0];
-            computeAndRenderFinancialMetrics();
-        };
+// Ensure the page pulls old saved information directly back into UI boxes upon frame load
+window.onload = () => {
+    document.getElementById('field-op-name').value = volatileSystemMemory.profile.name || "";
+    document.getElementById('field-op-email').value = volatileSystemMemory.profile.email || "";
+    document.getElementById('field-op-phone').value = volatileSystemMemory.profile.phone || "";
+    document.getElementById('field-op-dob').value = volatileSystemMemory.profile.dob || "";
+    document.getElementById('field-op-age').value = volatileSystemMemory.profile.age || "";
+    document.getElementById('field-op-profession').value = volatileSystemMemory.profile.profession || "";
+    
+    document.getElementById('input-date-val').value = new Date().toISOString().split('T')[0];
+    computeAndRenderFinancialMetrics();
+    
+};
     </script>
 </body>
 </html>
