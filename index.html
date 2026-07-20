@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Everyday Expense Tracker - College Project</title>
+    <!-- Chart.js for rendering the dashboard visuals -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* ==================== CORE STRUCTURAL CSS ==================== */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { bg-color: #f4f6f9; background: #f4f6f9; color: #333; min-height: 100vh; }
+        
+        /* View Switching Logic */
+        .view-panel { display: none; }
+        .view-panel.active { display: flex; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Auth Screen Styles */
+        .auth-wrapper { min-height: 100vh; width: 100%; display: flex; align-items: center; justify-content: center; background: #eef2f7; }
+        .auth-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+        .auth-card h2 { margin-bottom: 10px; color: #1e293b; text-align: center; }
+        .auth-card p { text-align: center; color: #64748b; font-size: 14px; margin-bottom: 25px; }
+        
+        /* Form Element Controls */
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: #475569; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
+        .form-group input:focus, .form-group select:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.15); }
+        
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-secondary { background: #64748b; color: white; margin-top: 10px; }
+        .btn-verify { background: #10b981; color: white; }
+
+        /* Main Application Workspace Layout */
+        .app-wrapper { min-height: 100vh; display: flex; flex-direction: row; width: 100%; }
+        
+        /* Sidebar Navigation Menu */
+        .sidebar { width: 260px; background: #0f172a; color: white; display: flex; flex-direction: column; padding: 20px; }
+        .sidebar-brand { font-size: 20px; font-weight: 700; padding: 10px 0 25px 10px; border-bottom: 1px solid #334155; color: #3b82f6; }
+        .sidebar-menu { flex: 1; margin-top: 25px; list-style: none; }
+        .menu-item { width: 100%; padding: 12px 15px; border: none; background: transparent; color: #cbd5e1; text-align: left; font-size: 15px; border-radius: 6px; cursor: pointer; margin-bottom: 8px; transition: 0.2s; }
+        .menu-item:hover, .menu-item.active { background: #1e293b; color: white; font-weight: 600; }
+        .btn-logout { background: #991b1b; color: #fca5a5; margin-top: auto; border: none; padding: 12px; border-radius: 6px; cursor: pointer; text-align: center; font-weight: 600; }
+        .btn-logout:hover { background: #7f1d1d; color: white; }
+
+        /* Main Content Body */
+        .main-workspace { flex: 1; padding: 40px; overflow-y: auto; }
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
+        
+        /* Dashboard Financial Grid Status Cards */
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .metric-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; }
+        .metric-card p { font-size: 12px; text-transform: uppercase; color: #64748b; font-weight: 600; }
+        .metric-card h3 { font-size: 24px; margin-top: 5px; color: #0f172a; }
+
+        /* Grid Layouts for Management and Analytics */
+        .dashboard-body { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; margin-bottom: 30px; }
+        @media(max-width: 900px) { .app-wrapper { flex-direction: column; } .sidebar { width: 100%; } .dashboard-body { grid-template-columns: 1fr; } }
+        
+        .card-box { background: white; padding: 25px; border-radius: 10px; border: 1px solid #e2e8f0; }
+        .card-box h4 { margin-bottom: 15px; font-size: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; color: #1e293b; }
+        
+        /* Records Table Elements */
+        .table-responsive { width: 100%; overflow-x: auto; background: white; border-radius: 10px; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        th { background: #f8fafc; padding: 14px; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 14px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        
+        /* Badges */
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .badge-income { background: #d1fae5; color: #065f46; }
+        .badge-expense { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== VIEW MODULE 1: AUTHENTICATION PANELS ==================== -->
+    <div id="panel-auth" class="view-panel active auth-wrapper">
+        
+        <!-- Screen 1A: Direct Login Form -->
+        <div id="subview-login" class="auth-card">
+            <h2>Sign In</h2>
+            <p>Everyday Expense Tracker Dashboard</p>
+            <form onsubmit="executeLogin(event)">
+                <div class="form-group">
+                    <label>Username / Email</label>
+                    <input type="text" value="student@college.edu" id="input-username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" value="admin123" id="input-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Log In</button>
+            </form>
+            <button onclick="toggleAuthSubView('forgot')" class="btn" style="color:#3b82f6; background:transparent; font-size:13px; margin-top:10px;">Forgot Password?</button>
+            <p style="margin-top:15px; font-size:11px; color:#94a3b8;">*Demo credentials pre-filled for your viva presentation.</p>
+        </div>
+
+        <!-- Screen 1B: Forgot Password Form -->
+        <div id="subview-forgot" class="auth-card" style="display:none;">
+            <h2>Reset Password</h2>
+            <p>Enter email to request a simulated OTP verification sequence.</p>
+            <form onsubmit="generateSimulatedOtp(event)">
+                <div class="form-group">                    <label>Registered Email Address</label>
+                    <input type="email" value="student@college.edu" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Generate OTP Code</button>
+            </form>
+            <button onclick="toggleAuthSubView('login')" class="btn btn-secondary">Back to Login</button>
+        </div>
+
+        <!-- Screen 1C: One-Time Password Verification Form -->
+        <div id="subview-otp" class="auth-card" style="display:none;">
+            <h2>Verify Identity</h2>
+            <p id="otp-hint-box" style="background:#dbeafe; color:#1e40af; padding:10px; border-radius:6px; font-weight:bold;"></p>
+            <form onsubmit="verifySimulatedOtp(event)">
+                <div class="form-group">
+                    <label>Enter 6-Digit Code</label>
+                    <input type="text" id="input-otp" placeholder="Enter code from above" style="text-align:center; font-size:20px; letter-spacing:4px;" required>
+                </div>
+                <button type="submit" class="btn btn-verify">Verify Code & Enter</button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- ==================== VIEW MODULE 2: INTERNAL TRACKER APP ==================== -->
+    <div id="panel-app" class="view-panel app-wrapper">
+        
+        <!-- Left Sidebar Main Navigation controls -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">SpendWise App</div>
+            <ul class="sidebar-menu">
+                <li><button onclick="activateAppTab('dashboard')" id="nav-dashboard" class="menu-item active">Dashboard View</button></li>
+                <li><button onclick="activateAppTab('profile')" id="nav-profile" class="menu-item">Profile Section</button></li>
+            </ul>
+            <!-- LOGOUT CONTROL SYSTEM HERE -->
+            <button onclick="executeLogout()" class="btn-logout">Logout</button>
+        </aside>
+
+        <!-- Main Dashboard View Panel viewport -->
+        <main class="main-workspace">
+            
+            <!-- Tab Layout Content: Analytics Dashboard -->
+            <div id="tab-dashboard" class="tab-content active">
+                <div class="main-header">
+                    <div>
+                        <h1 style="font-size:28px; color:#0f172a;">Financial Workspace</h1>
+                        <p style="color:#64748b; font-size:14px;">Live tracking metrics for your viva documentation</p>
+                    </div>
+                </div>
+
+                <!-- Financial Balance Metrics Bar -->
+                <div class="metrics-grid">
+                    <div class="metric-card" style="border-left: 4px solid #10b981;">
+                        <p>Total Income</p>
+                        <h3 id="display-income">$0.00</h3>
+                    </div>
+                    <div class="metric-card" style="border-left: 4px solid #ef4444;">
+                        <p>Total Expenses</p>
+                        <h3 id="display-expenses">$0.00</h3>
+                    </div>
+                    <div class="metric-card" style="border-left: 4px solid #3b82f6;">
+                        <p>Net Balance Remaining</p>
+                        <h3 id="display-balance">$0.00</h3>
+                    </div>
+                </div>
+
+                <!-- Main Section Form Elements and Canvas Rendering -->
+                <div class="dashboard-body">
+                    
+                    <!-- Left: Entry Log Form -->
+                    <div class="card-box">
+                        <h4>Log New Entry</h4>
+                        <form onsubmit="registerNewTransaction(event)">
+                            <div class="form-group">
+                                <label>Transaction Type</label>
+                                <select id="form-tx-type">
+                                    <option value="expense">Expense (-)</option>
+                                    <option value="income">Income (+)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Value Amount ($)</label>
+                                <input type="number" step="0.01" id="form-tx-amount" placeholder="0.00" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Category Classification</label>
+                                <select id="form-tx-category">
+                                    <option value="Food">Food & Catering</option>
+                                    <option value="Rent">Rent & Living</option>
+                                    <option value="Transport">Transit & Travel</option>
+                                    <option value="Leisure">Entertainment</option>
+                                    <option value="Stipend">Stipend/Salary</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Memo Description</label>
+                                <input type="text" id="form-tx-desc" placeholder="Details..." required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save to Ledger</button>
+                        </form>
+                    </div>
+
+                    <!-- Right: Dynamic Chart Render Box -->
+                    <div class="card-box" style="display: flex; flex-direction: column;">
+                        <h4>Expense Allocation Breakdown Chart</h4>
+                        <div style="position: relative; flex: 1; min-height: 250px;">
+                            <canvas id="canvas-rendering-context"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Bottom Segment: Table Database Ledger -->
+                <div class="card-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h4 style="margin:0; border:none; padding:0;">Ledger Transaction History Log</h4>
+                        <button onclick="clearLocalStorageEngine()" style="background:transparent; color:#ef4444; border:none; font-size:12px; cursor:pointer; font-weight:600;">Reset Database</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Description Details</th>
+                                    <th>Category</th>
+                                    <th>Flow Type</th>
+                                    <th style="text-align: right;">Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ledger-table-rows">
+                                <!-- Data mapped live via JavaScript dynamic loading -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Layout Content: Profile Settings Interface -->
+            <div id="tab-profile" class="tab-content">
+                <div class="card-box" style="max-w: 600px;">
+                    <h4>User Account Matrix Configuration</h4>
+                    <form onsubmit="saveUserProfileData(event)">
+                        <div class="form-group">
+                            <label>Full Developer / Student Name</label>
+                            <input type="text" id="profile-field-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Account Electronic Mail ID</label>
+                            <input type="email" id="profile-field-email" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: auto; padding: 10px 25px;">Update Profile Matrix</button>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ==================== ENGINE ARCHITECTURE JAVASCRIPT ==================== -->
+    <script>
+        // ==================== RE-ENGINEERED PERSISTENT LEDGER ENGINE ====================
+let liveSystemCodeOTP = null;
+let runningChartReference = null;
+
+// Baseline Fallback Database - If local storage fails, these defaults always load
+const seedMockDatabaseData = {
+    profile: { name: "System Examiner", email: "student@college.edu" },
+    ledger: [
+        { id: 101, desc: "Scholarship Credit", category: "Stipend", type: "income", amount: 1200.00 },
+        { id: 102, desc: "Academic Housing", category: "Rent", type: "expense", amount: 450.00 },
+        { id: 103, desc: "Campus Cafeteria", category: "Food", type: "expense", amount: 120.50 },
+        { id: 104, desc: "Metro Transit Card", category: "Transport", type: "expense", amount: 45.00 }
+    ]
+};
+
+// Global application memory state
+let activeMemoryData;
+
+// SAFELY INITIALIZE DATABASE MATRIX
+try {
+    const storedData = localStorage.getItem('viva_expense_db');
+    if (storedData) {
+        activeMemoryData = JSON.parse(storedData);
+    } else {
+        activeMemoryData = seedMockDatabaseData;
+        localStorage.setItem('viva_expense_db', JSON.stringify(seedMockDatabaseData));
+    }
+} catch (error) {
+    console.warn("Browser storage permissions restricted. Utilizing active runtime backup matrix.");
+    activeMemoryData = seedMockDatabaseData; 
+}
+
+function updateStorageEngine() {
+    try {
+        localStorage.setItem('viva_expense_db', JSON.stringify(activeMemoryData));
+    } catch (e) {
+        console.error("Storage write blocked by browser configuration settings.");
+    }
+}
+
+// Subview Router inside Auth Panel
+function toggleAuthSubView(targetView) {
+    document.getElementById('subview-login').style.display = 'none';
+    document.getElementById('subview-forgot').style.display = 'none';
+    document.getElementById('subview-otp').style.display = 'none';
+    
+    document.getElementById(`subview-${targetView}`).style.display = 'block';
+}
+
+// Core Auth Form Handlers
+function executeLogin(event) {
+    event.preventDefault();
+    bootMainApplicationScreen();
+}
+
+function generateSimulatedOtp(event) {
+    event.preventDefault();
+    liveSystemCodeOTP = Math.floor(100000 + Math.random() * 900000);
+    document.getElementById('otp-hint-box').innerHTML = `Simulated SMS Gateway Code: <span style="text-decoration: underline;">${liveSystemCodeOTP}</span>`;
+    toggleAuthSubView('otp');
+}
+
+function verifySimulatedOtp(event) {
+    event.preventDefault();
+    const inputVal = document.getElementById('input-otp').value;
+    if (inputVal === String(liveSystemCodeOTP)) {
+        bootMainApplicationScreen();
+    } else {
+        alert("Verification mismatched code string.");
+    }
+}
+
+// App Screen Mounting
+function bootMainApplicationScreen() {
+    document.getElementById('panel-auth').classList.remove('active');
+    document.getElementById('panel-auth').style.display = 'none';
+    
+    document.getElementById('panel-app').classList.add('active');
+    document.getElementById('panel-app').style.display = 'flex';
+    
+    document.getElementById('profile-field-name').value = activeMemoryData.profile.name;
+    document.getElementById('profile-field-email').value = activeMemoryData.profile.email;
+    
+    activateAppTab('dashboard');
+}
+
+function executeLogout() {
+    document.getElementById('panel-app').classList.remove('active');
+    document.getElementById('panel-app').style.display = 'none';
+    
+    document.getElementById('panel-auth').classList.add('active');
+    document.getElementById('panel-auth').style.display = 'flex';
+    
+    toggleAuthSubView('login');
+    document.getElementById('input-otp').value = '';
+}
+
+// Internal Navigation Tabs
+function activateAppTab(targetTab) {
+    document.getElementById('tab-dashboard').style.display = 'none';
+    document.getElementById('tab-profile').style.display = 'none';
+    document.getElementById('nav-dashboard').classList.remove('active');
+    document.getElementById('nav-profile').classList.remove('active');
+
+    document.getElementById(`tab-${targetTab}`).style.display = 'block';
+    document.getElementById(`nav-${targetTab}`).classList.add('active');
+
+    if (targetTab === 'dashboard') {
+        calculateAndRenderLedgerViewports();
+    }
+}
+
+// Profile Synchronization
+function saveUserProfileData(event) {
+    event.preventDefault();
+    activeMemoryData.profile.name = document.getElementById('profile-field-name').value;
+    activeMemoryData.profile.email = document.getElementById('profile-field-email').value;
+    updateStorageEngine();
+    alert("Profile configurations synchronized securely.");
+}
+
+// Add New Transactions to the Active Matrix
+function registerNewTransaction(event) {
+    event.preventDefault();
+    
+    const type = document.getElementById('form-tx-type').value;
+    const amount = parseFloat(document.getElementById('form-tx-amount').value);
+    const category = document.getElementById('form-tx-category').value;
+    const desc = document.getElementById('form-tx-desc').value;
+
+    // Push into the array so it's instantly locked into the system memory state
+    activeMemoryData.ledger.unshift({
+        id: Date.now(),
+        desc,
+        category,
+        type,
+        amount
+    });
+
+    updateStorageEngine();
+    calculateAndRenderLedgerViewports();
+    
+    document.getElementById('form-tx-amount').value = '';
+    document.getElementById('form-tx-desc').value = '';
+}
+
+function clearLocalStorageEngine() {
+    if (confirm("Restore structural defaults? This wipes all transaction data tracks.")) {
+        activeMemoryData = JSON.parse(JSON.stringify(seedMockDatabaseData));
+        updateStorageEngine();
+        calculateAndRenderLedgerViewports();
+    }
+}
+
+// Dynamic Computations & Graphical Chart Generators
+function calculateAndRenderLedgerViewports() {
+    let totalIncomeCalculated = 0;
+    let totalExpenseCalculated = 0;
+    let breakdownChartMap = { Food: 0, Rent: 0, Transport: 0, Leisure: 0, Stipend: 0 };
+
+    const targetTableBody = document.getElementById('ledger-table-rows');
+    targetTableBody.innerHTML = '';
+
+    activeMemoryData.ledger.forEach(item => {
+        if (item.type === 'income') {
+            totalIncomeCalculated += item.amount;
+        } else {
+            totalExpenseCalculated += item.amount;
+            breakdownChartMap[item.category] = (breakdownChartMap[item.category] || 0) + item.amount;
+        }
+
+        const htmlRowElement = document.createElement('tr');
+        htmlRowElement.innerHTML = `
+            <td><b>${item.desc}</b></td>
+            <td><span style="font-size:12px; background:#f1f5f9; padding:4px 8px; border-radius:4px;">${item.category}</span></td>
+            <td><span class="badge ${item.type === 'income' ? 'badge-income' : 'badge-expense'}">${item.type}</span></td>
+            <td style="text-align: right; font-weight: 700; color: ${item.type === 'income' ? '#10b981' : '#1e293b'}">
+                ${item.type === 'income' ? '+' : '-'}$${item.amount.toFixed(2)}
+            </td>
+        `;
+        targetTableBody.appendChild(htmlRowElement);
+    });
+
+    document.getElementById('display-income').innerText = `$${totalIncomeCalculated.toFixed(2)}`;
+    document.getElementById('display-expenses').innerText = `$${totalExpenseCalculated.toFixed(2)}`;
+    
+    const computationalBalance = totalIncomeCalculated - totalExpenseCalculated;
+    const balanceTextTarget = document.getElementById('display-balance');
+    balanceTextTarget.innerText = `${computationalBalance < 0 ? '-' : ''}$${Math.abs(computationalBalance).toFixed(2)}`;
+    balanceTextTarget.style.color = computationalBalance < 0 ? '#ef4444' : '#0f172a';
+
+    if (runningChartReference) {
+        runningChartReference.destroy();
+    }
+
+    const nativeCanvasContext = document.getElementById('canvas-rendering-context').getContext('2d');
+    runningChartReference = new Chart(nativeCanvasContext, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(breakdownChartMap),
+            datasets: [{
+                label: 'Aggregated Outflow ($)',
+                data: Object.values(breakdownChartMap),
+                backgroundColor: ['#f87171', '#60a5fa', '#34d399', '#fbbf24', '#c084fc'],
+                borderWidth: 0,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
