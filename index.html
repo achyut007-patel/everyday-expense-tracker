@@ -3,636 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> VeloFin // Next-Gen Financial Ledger</title>
-    <!-- Chart.js and FontAwesome CDN links -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>VeloFin // Velocity Financial Portal</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
-        /* ==================== CYBERPUNK GLASSMORPHISM DESIGN SYSTEM ==================== */
-        :root {
-            --bg-glow: #070a13;
-            --panel-bg: rgba(15, 23, 42, 0.45);
-            --border-glow: rgba(59, 130, 246, 0.2);
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --neon-blue: #3b82f6;
-            --neon-cyan: #06b6d4;
-            --neon-green: #10b981;
-            --neon-rose: #f43f5e;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        body { background-color: var(--bg-glow); color: var(--text-primary); min-height: 100vh; overflow-x: hidden; }
-        
-        /* Dynamic View Routers */
-        .app-view { display: none; width: 100%; min-height: 100vh; }
-        .app-view.active { display: block; animation: fadeIn 0.4s ease-out forwards; }
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Futuristic Glass Cards */
-        .glass-card {
-            background: var(--panel-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-glow);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            transition: border-color 0.3s ease;
-        }
-        .glass-card:hover { border-color: rgba(6, 182, 212, 0.4); }
-
-        /* ==================== SCREEN 1: WELCOME / LANDING PAGE ==================== */
-        .welcome-hero {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 20px;
-            background: radial-gradient(circle at 50% 40%, rgba(59, 130, 246, 0.15) 0%, transparent 60%);
-        }
-        .cyber-badge {
-            background: rgba(6, 182, 212, 0.1);
-            border: 1px solid var(--neon-cyan);
-            color: var(--neon-cyan);
-            padding: 6px 16px;
-            border-radius: 100px;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 24px;
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
-        }
-        .hero-title { font-size: 3.5rem; font-weight: 900; tracking: -0.05em; margin-bottom: 16px; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero-title span { background: linear-gradient(to right, var(--neon-blue), var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero-desc { color: var(--text-secondary); max-width: 540px; font-size: 1.1rem; line-height: 1.6; margin-bottom: 32px; }
-        
-        .portal-btn {
-            background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan));
-            color: white; padding: 16px 40px; border-radius: 12px; font-weight: 700; font-size: 16px;
-            border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
-            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4); transition: all 0.3s ease;
-        }
-        .portal-btn:hover { transform: scale(1.03); box-shadow: 0 4px 30px rgba(6, 182, 212, 0.6); }
-
-        /* ==================== SCREEN 2: AUTH CLUSTER ==================== */
-        .auth-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #0b0f19; }
-        .auth-card { width: 100%; max-width: 420px; }
-        .auth-card h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; text-align: center; }
-        
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
-        .form-group input, .form-group select {
-            width: 100%; padding: 12px 16px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-glow);
-            border-radius: 8px; color: white; font-size: 14px; outline: none; transition: all 0.2s;
-        }
-        .form-group input:focus, .form-group select:focus { border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(6, 182, 212, 0.2); }
-        
-        /* ==================== SCREEN 3: DASHBOARD WORKSPACE ==================== */
-        .app-layout { display: flex; min-height: 100vh; }
-        .sidebar { width: 260px; background: rgba(10, 15, 30, 0.7); border-right: 1px solid var(--border-glow); display: flex; flex-direction: column; padding: 24px; backdrop-filter: blur(20px); }
-        .sidebar-brand { font-size: 22px; font-weight: 900; letter-spacing: -1px; color: white; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; }
-        .sidebar-brand i { color: var(--neon-cyan); }
-        
-        .menu-list { list-style: none; flex: 1; }
-        .menu-btn {
-            width: 100%; padding: 14px 16px; background: transparent; border: none; text-align: left;
-            color: var(--text-secondary); font-size: 15px; font-weight: 500; border-radius: 8px; cursor: pointer;
-            display: flex; align-items: center; gap: 12px; transition: all 0.2s; margin-bottom: 6px;
-        }
-        .menu-btn:hover, .menu-btn.active { background: rgba(59, 130, 246, 0.1); color: var(--text-primary); font-weight: 600; }
-        .menu-btn.active { border-left: 3px solid var(--neon-cyan); }
-        
-        .logout-btn { background: rgba(244, 63, 94, 0.1); color: var(--neon-rose); border: 1px solid rgba(244, 63, 94, 0.2); padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .logout-btn:hover { background: var(--neon-rose); color: white; }
-
-        .main-content { flex: 1; padding: 40px; overflow-y: auto; background: radial-gradient(circle at top right, rgba(6, 182, 212, 0.05), transparent 40%); }
-        .content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
-        
-        /* Timeline Filter Buttons */
-        .filter-group { display: flex; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-glow); padding: 4px; border-radius: 8px; }
-        .filter-btn { background: transparent; border: none; color: var(--text-secondary); padding: 6px 16px; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
-        .filter-btn.active { background: var(--neon-blue); color: white; }
-
-        /* Financial Analytics Display Cards */
-        .metrics-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-bottom: 32px; }
-        .stat-card { position: relative; overflow: hidden; }
-        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; }
-        .stat-income::before { background: var(--neon-green); }
-        .stat-expense::before { background: var(--neon-rose); }
-        .stat-balance::before { background: var(--neon-blue); }
-        
-        .stat-card p { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 1px; }
-        .stat-card h3 { font-size: 28px; font-weight: 800; margin-top: 8px; }
-
-        /* Workspace Core Structures Split mapping */
-        .grid-workspace { display: grid; grid-template-columns: 1fr 2fr; gap: 32px; margin-bottom: 32px; }
-        @media (max-width: 1024px) { .grid-workspace { grid-template-columns: 1fr; } .app-layout { flex-direction: column; } .sidebar { width: 100%; } }
-
-        /* Ledger Table Framework */
-        .table-container { width: 100%; overflow-x: auto; margin-top: 16px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { padding: 16px; color: var(--text-secondary); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border-glow); }
-        td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 14px; }
-
-        .btn-action { background: var(--neon-cyan); color: #000; border: none; padding: 10px 20px; font-weight: 700; font-size: 13px; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-action:hover { opacity: 0.9; transform: translateY(-1px); }
-        
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-        .badge-in { background: rgba(16, 185, 129, 0.15); color: var(--neon-green); }
-        .badge-out { background: rgba(244, 63, 94, 0.15); color: var(--neon-rose); }
+        .page-segment { display: none; width: 100%; height: 100vh; align-items: center; justify-content: center; }
+        .page-segment.active { display: flex; animation: fadeIn 0.4s ease-out; }
+        .welcome-viewport { flex-direction: column; text-align: center; background: radial-gradient(circle at 50% 45%, rgba(6, 182, 212, 0.12) 0%, transparent 55%); }
+        .title-hero { font-size: 3.5rem; font-weight: 900; margin-bottom: 16px; color: #fff; }
+        .title-hero span { background: linear-gradient(to right, var(--neon-blue), var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <!-- ==================== INTERACTIVE MODULE 1: LANDING/WELCOME WINDOW ==================== -->
-    <div id="view-welcome" class="app-view active welcome-hero">
-        <div class="cyber-badge">System Core v2.0 // Active</div>
-        <h1 class="hero-title">Everyday Expense <span>Tracker AI</span></h1>
-        <p class="hero-desc">Empower your personal cash ledger with automated visual distribution metrics, persistent local cache layers, and real-time balance calculations.</p>
-        <button onclick="navigateView('auth')" class="portal-btn">Access Management System <i class="fa-solid fa-arrow-right ml-2"></i></button>
+    <!-- SECTION 1: WELCOME ROUTINE WINDOW -->
+    <div id="segment-welcome" class="page-segment active welcome-viewport">
+        <h1 class="title-hero">Velo<span>Fin Framework</span></h1>
+        <p style="color:var(--text-muted); max-width:520px; font-size:1.05rem; line-height:1.6; margin-bottom:32px;">High-velocity asset logging pipelines, instant data serialization, and real-time ledger accounting.</p>
+        <button onclick="goToSubAuth('login')" class="action-btn">Launch System Gateway <i class="fa-solid fa-bolt-lightning" style="margin-left:8px;"></i></button>
     </div>
 
-    <!-- ==================== INTERACTIVE MODULE 2: GATEWAY PORTAL (AUTH) ==================== -->
-    <div id="view-auth" class="app-view auth-container">
+    <!-- SECTION 2: AUTH SEGMENT CLUSTER -->
+    <div id="segment-auth" class="page-segment">
         
-        <!-- View 2A: Main Login Form -->
-        <div id="sub-login" class="glass-card auth-card">
-            <h2>Welcome Back</h2>
-            <p style="margin-bottom:20px;">Initialize session to decrypt financial ledgers</p>
-            <form onsubmit="handleLoginSubmit(event)">
-                <div class="form-group">
-                    <label>Terminal Operator ID</label>
-                    <input type="text" value="student@college.edu" id="auth-user" required>
+        <!-- Login Form Element -->
+        <div id="box-login" class="glass-panel" style="width: 100%; max-width: 400px;">
+            <h2 style="font-size:24px; font-weight:800; margin-bottom:6px; text-align:center;">Operator Portal</h2>
+            <p style="color:var(--text-muted); font-size:13px; text-align:center; margin-bottom:20px;">Provide system keys to decrypt user matrices</p>
+            <form onsubmit="handleRouteToDashboard(event)">
+                <div class="input-block">
+                    <label>Terminal Operator Email ID</label>
+                    <input type="text" value="student@college.edu" id="field-user-id" required>
                 </div>
-                <div class="form-group">
-                    <label>Access Verification Key</label>
-                    <input type="password" value="admin123" id="auth-pass" required>
+                <div class="input-block">
+                    <label>System Passkey String</label>
+                    <input type="password" value="admin123" id="field-pass-id" required>
                 </div>
-                <button type="submit" class="portal-btn" style="width:100%; padding:12px;">Execute Access Sign-In</button>
+                <button type="submit" class="action-btn" style="width:100%; padding:12px;">Execute Secure Login</button>
             </form>
-            <button onclick="switchAuthSubView('forgot')" class="btn" style="width:100%; background:transparent; border:none; color:var(--neon-cyan); font-size:13px; margin-top:15px; cursor:pointer;">Request Security Password Reset?</button>
+            <button onclick="toggleAuthForms('forgot')" style="width:100%; background:transparent; border:none; color:var(--neon-cyan); font-size:13px; margin-top:15px; cursor:pointer;">Forgot access parameters?</button>
         </div>
 
-        <!-- View 2B: Forgot Password Matrix -->
-        <div id="sub-forgot" class="glass-card auth-card" style="display:none;">
-            <h2>Key Recovery Core</h2>
-            <p style="margin-bottom:20px;">Enter system handle to trigger structural emergency OTP validation</p>
-            <form onsubmit="triggerOtpProtocol(event)">
-                <div class="form-group">
-                    <label>Operator Registration Mail</label>
+        <!-- Forgot Form Element -->
+        <div id="box-forgot" class="glass-panel" style="width: 100%; max-width: 400px; display:none;">
+            <h2 style="font-size:24px; font-weight:800; margin-bottom:6px; text-align:center;">Key Recovery</h2>
+            <p style="color:var(--text-muted); font-size:13px; text-align:center; margin-bottom:20px;">Trigger emergency fallback multi-factor override</p>
+            <form onsubmit="generateSystemOtp(event)">
+                <div class="input-block">
+                    <label>Account Registration Mail</label>
                     <input type="email" value="student@college.edu" required>
                 </div>
-                <button type="submit" class="portal-btn" style="width:100%; padding:12px;">Dispatch Secure OTP</button>
+                <button type="submit" class="action-btn" style="width:100%; padding:12px;">Transmit MFA OTP Code</button>
             </form>
-            <button onclick="switchAuthSubView('login')" class="btn" style="width:100%; background:transparent; border:none; color:var(--text-secondary); font-size:13px; margin-top:15px; cursor:pointer;">Abandone & Return</button>
+            <button onclick="toggleAuthForms('login')" style="width:100%; background:transparent; border:none; color:var(--text-muted); font-size:13px; margin-top:15px; cursor:pointer;">Cancel Routine</button>
         </div>
 
-        <!-- View 2C: Simulated System OTP Input -->
-        <div id="sub-otp" class="glass-card auth-card" style="display:none;">
-            <h2>MFA Verification Gateway</h2>
-            <p id="otp-display-terminal" style="background:rgba(59,130,246,0.1); color:var(--neon-blue); padding:12px; border-radius:8px; font-weight:700; border:1px dashed var(--neon-blue); margin-bottom:20px;"></p>
-            <form onsubmit="verifyOtpProtocol(event)">
-                <div class="form-group">
-                    <label>Enter Simulated OTP Digits</label>
-                    <input type="text" id="otp-input-field" placeholder="xxxxxx" style="text-align:center; font-size:22px; letter-spacing:6px;" required>
+        <!-- OTP Verification Form Element -->
+        <div id="box-otp" class="glass-panel" style="width: 100%; max-width: 400px; display:none;">
+            <h2 style="font-size:24px; font-weight:800; margin-bottom:6px; text-align:center;">Handshake Tokens</h2>
+            <p id="alert-otp-box" style="background:rgba(59,130,246,0.1); color:var(--neon-blue); text-align:center; padding:10px; border-radius:6px; font-weight:700; border:1px dashed var(--neon-blue); font-size:13px; margin-bottom:20px;"></p>
+            <form onsubmit="handleRouteToDashboard(event)">
+                <div class="input-block">
+                    <label>Enter Token Signature</label>
+                    <input type="text" id="field-otp" placeholder="xxxxxx" style="text-align:center; font-size:22px; letter-spacing:5px;" required>
                 </div>
-                <button type="submit" class="portal-btn" style="width:100%; padding:12px; background:linear-gradient(135deg, var(--neon-green), #059669); box-shadow:0 4px 20px rgba(16,185,129,0.3)">Authorize Workspace Session</button>
+                <button type="submit" class="action-btn" style="width:100%; padding:12px; background:linear-gradient(135deg, var(--neon-green), #059669);">Authorize Workspace</button>
             </form>
         </div>
 
     </div>
 
-    <!-- ==================== INTERACTIVE MODULE 3: ACTIVE SYSTEM INTERFACE ==================== -->
-    <div id="view-app" class="app-view app-layout">
-        
-        <!-- Left Structural Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-brand">
-                <i class="fa-solid fa-bolt"></i><span>XpenseAI</span>
-            </div>
-            <ul class="menu-list">
-                <li><button onclick="switchTab('dashboard')" id="nav-dashboard" class="menu-btn active"><i class="fa-solid fa-chart-line"></i>Core Dashboard</button></li>
-                <li><button onclick="switchTab('profile')" id="nav-profile" class="menu-btn"><i class="fa-solid fa-user-gear"></i>Operator Setup</button></li>
-            </ul>
-            <button onclick="executeSystemLogout()" class="logout-btn"><i class="fa-solid fa-power-off"></i>Terminate Session</button>
-        </aside>
-
-        <!-- Right Main Processing Environment viewport -->
-        <main class="main-content">
-            
-            <!-- Tab Layout Section: Live Financial Panel Engine -->
-            <div id="tab-dashboard" class="tab-panel active">
-                <div class="content-header">
-                    <div>
-                        <h2 style="font-size:28px; font-weight:800;">Command Center Console</h2>
-                        <p style="color:var(--text-secondary); font-size:14px; margin-top:4px;">Dynamic asset analysis pipelines active</p>
-                    </div>
-                    <!-- TIMELINE SWITCHER SYSTEM -->
-                    <div class="filter-group">
-                        <button onclick="setTimelineFilter('all')" id="filter-all" class="filter-btn active">All-Time</button>
-                        <button onclick="setTimelineFilter('weekly')" id="filter-weekly" class="filter-btn">Weekly Window</button>
-                        <button onclick="setTimelineFilter('monthly')" id="filter-monthly" class="filter-btn">Monthly Window</button>
-                    </div>
-                </div>
-
-                <!-- Three Segment Capital Monitoring Data Grid -->
-                <div class="metrics-container">
-                    <div class="glass-card stat-card stat-income">
-                        <p>Total Capital Inflow</p>
-                        <h3 id="render-inflow-txt">$0.00</h3>
-                    </div>
-                    <div class="glass-card stat-card stat-expense">
-                        <p>Total Capital Outflow</p>
-                        <h3 id="render-outflow-txt">$0.00</h3>
-                    </div>
-                    <div class="glass-card stat-card stat-balance">
-                        <p>Net Liquidity Pool</p>
-                        <h3 id="render-balance-txt">$0.00</h3>
-                    </div>
-                </div>
-
-                <!-- Input Aggregator Block Split -->
-                <div class="grid-workspace">
-                    
-                    <!-- Form Control Module -->
-                    <div class="glass-card">
-                        <h3 style="font-size:16px; font-weight:700; text-transform:uppercase; border-bottom:1px solid var(--border-glow); padding-bottom:12px; margin-bottom:18px;"><i class="fa-solid fa-circle-plus" style="color:var(--neon-cyan); margin-right:8px;"></i>Register Data Frame</h3>
-                        <form onsubmit="commitNewRecord(event)">
-                            <div class="form-group">
-                                <label>Flow Dimension</label>
-                                <select id="tx-flow-dimension">
-                                    <option value="expense">Outflow (-) Expense</option>
-                                    <option value="income">Inflow (+) Income</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Asset Value ($)</label>
-                                <input type="number" step="0.01" id="tx-asset-value" placeholder="0.00" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Domain Categorization</label>
-                                <select id="tx-domain-cat">
-                                    <option value="Food">Nutrition & Catering</option>
-                                    <option value="Rent">Facilities & Rent</option>
-                                    <option value="Transport">Transit Logistics</option>
-                                    <option value="Leisure">Recreational Media</option>
-                                    <option value="Stipend">Corporate Grants/Salary</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Specification Descriptor</label>
-                                <input type="text" id="tx-spec-desc" placeholder="Transaction parameters..." required>
-                            </div>
-                            <!-- WEEKLY/MONTHLY DURATION ASSIGNMENT KEY -->
-                            <div class="form-group">
-                                <label>Log Timestamp</label>
-                                <input type="date" id="tx-timestamp" required>
-                            </div>
-                            <button type="submit" class="portal-btn" style="width:100%; padding:12px; font-size:14px;">Inject Into Ledger</button>
-                        </form>
-                    </div>
-
-                    <!-- Chart Analytical Canvas Card -->
-                    <div class="glass-card" style="display:flex; flex-direction:column;">
-                        <h3 style="font-size:16px; font-weight:700; text-transform:uppercase; border-bottom:1px solid var(--border-glow); padding-bottom:12px; margin-bottom:18px;"><i class="fa-solid fa-chart-simple" style="color:var(--neon-blue); margin-right:8px;"></i>Vector Allocation Analytics</h3>
-                        <div style="position:relative; flex:1; min-height:280px;">
-                            <canvas id="analytical-canvas-frame"></canvas>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- Ledger Database Panel Section -->
-                <div class="glass-card">
-                    <div style="display:flex; justify-content:between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border-glow); padding-bottom:12px; gap: 20px;">
-                        <h3 style="font-size:16px; font-weight:700; text-transform:uppercase; margin:0; flex:1;"><i class="fa-solid fa-database" style="color:var(--neon-green); margin-right:8px;"></i>Committed Ledger Database</h3>
-                        
-                        <!-- EXPORT TO SPREADSHEET ENGINE TRIGGER -->
-                        <button onclick="exportLedgerToCSV()" class="btn-action"><i class="fa-solid fa-file-csv"></i>Export Spreadsheet (.CSV)</button>
-                        <button onclick="wipeDatabaseDefaults()" style="background:transparent; color:var(--neon-rose); border:none; font-size:12px; font-weight:700; cursor:pointer; text-transform:uppercase;">Purge Cache Matrix</button>
-                    </div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Logged Date</th>
-                                    <th>Specification Descriptor</th>
-                                    <th>Domain Category</th>
-                                    <th>Dimension</th>
-                                    <th style="text-align:right;">Asset Value</th>
-                                </tr>
-                            </thead>
-                            <tbody id="injected-table-rows">
-                                <!-- Computed arrays loaded internally via javascript processing cycles -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab Layout Section: User Matrix Setup Profile -->
-            <div id="tab-profile" class="tab-panel">
-                <div class="glass-card" style="max-w:650px;">
-                    <h3 style="font-size:18px; font-weight:800; border-bottom:1px solid var(--border-glow); padding-bottom:12px; margin-bottom:20px;">Operator System Parameters</h3>
-                    <form onsubmit="synchronizeOperatorProfile(event)">
-                        <div class="form-group">
-                            <label>Designated System Operator Identity</label>
-                            <input type="text" id="prof-op-name" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Secure Network Contact Handle (Email)</label>
-                            <input type="email" id="prof-op-email" required>
-                        </div>
-                        <button type="submit" class="portal-btn" style="padding:12px 32px; font-size:14px;">Synchronize Matrix Setup</button>
-                    </form>
-                </div>
-            </div>
-
-        </main>
-    </div>
-
-    <!-- ==================== JAVASCRIPT SYSTEM ENGINE ==================== -->
     <script>
-        let generatedSessionMFA = null;
-        let activeChartPipeline = null;
-        let activeTimelineFilterMode = 'all'; // all | weekly | monthly
+        let liveOtpToken = null;
 
-        // Preloaded Architectural Mock Data Seeds 
-        const frameworkDataSeeds = {
-            profile: { name: "Senior System Analyst", email: "student@college.edu" },
-            ledger: [
-                { id: 201, date: "2026-07-18", desc: "System Engineering Grant", category: "Stipend", type: "income", amount: 2500.00 },
-                { id: 202, date: "2026-07-17", desc: "Main Server Frame Housing", category: "Rent", type: "expense", amount: 600.00 },
-                { id: 203, date: "2026-07-15", desc: "Compute Farm Cooling Power", category: "Rent", type: "expense", amount: 140.00 },
-                { id: 204, date: "2026-07-12", desc: "Consumable Caffeine Nutrition", category: "Food", type: "expense", amount: 34.50 },
-                { id: 205, date: "2026-07-05", desc: "Optical Transport Mesh Card", category: "Transport", type: "expense", amount: 85.00 },
-                { id: 206, date: "2026-06-28", desc: "Legacy Monthly Allowance Stipend", category: "Stipend", type: "income", amount: 1500.00 }
-            ]
-        };
-
-        // Persistent cache storage retrieval pipeline 
-        let localizedSystemData = JSON.parse(localStorage.getItem('nextgen_ledger_vault')) || frameworkDataSeeds;
-
-        function commitToCacheMemory() {
-            localStorage.setItem('nextgen_ledger_vault', JSON.stringify(localizedSystemData));
+        function goToSubAuth(formType) {
+            document.getElementById('segment-welcome').classList.remove('active');
+            document.getElementById('segment-auth').classList.add('active');
+            toggleAuthForms(formType);
         }
 
-        // View Master State Switcher Controls
-        function navigateView(targetViewId) {
-            document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
-            document.getElementById(`view-${targetViewId}`).classList.add('active');
+        function toggleAuthForms(targetForm) {
+            document.getElementById('box-login').style.display = 'none';
+            document.getElementById('box-forgot').style.display = 'none';
+            document.getElementById('box-otp').style.display = 'none';
+            document.getElementById(`box-${targetForm}`).style.display = 'block';
         }
 
-        function switchAuthSubView(subViewId) {
-            document.getElementById('sub-login').style.display = 'none';
-            document.getElementById('sub-forgot').style.display = 'none';
-            document.getElementById('sub-otp').style.display = 'none';
-            document.getElementById(`sub-${subViewId}`).style.display = 'block';
-        }
-
-        // Access Authorization Handlers
-        function handleLoginSubmit(e) {
+        function generateSystemOtp(e) {
             e.preventDefault();
-            bootMainApplicationWorkspace();
+            liveOtpToken = Math.floor(100000 + Math.random() * 900000);
+            document.getElementById('alert-otp-box').innerHTML = `SMS Gate Code String: <span style="text-decoration:underline;">${liveOtpToken}</span>`;
+            toggleAuthForms('otp');
         }
 
-        function triggerOtpProtocol(e) {
+        function handleRouteToDashboard(e) {
             e.preventDefault();
-            generatedSessionMFA = Math.floor(100000 + Math.random() * 900000);
-            document.getElementById('otp-display-terminal').innerHTML = `Simulated SMS Gateway Pipeline OTP Key: <span style="text-decoration:underline; font-size:16px;">${generatedSessionMFA}</span>`;
-            switchAuthSubView('otp');
-        }
-
-        function verifyOtpProtocol(e) {
-            e.preventDefault();
-            const inputVal = document.getElementById('otp-input-field').value;
-            if (inputVal === String(generatedSessionMFA)) {
-                bootMainApplicationWorkspace();
-            } else {
-                alert("Security handshake failed: Invalid Multi-Factor Authentication signature.");
-            }
-        }
-
-        function executeSystemLogout() {
-            navigateView('auth');
-            switchAuthSubView('login');
-            document.getElementById('otp-input-field').value = '';
-        }
-
-        // Workspace Main Subtab Navigations router
-        function switchTab(tabId) {
-            document.getElementById('tab-dashboard').style.display = 'none';
-            document.getElementById('tab-profile').style.display = 'none';
-            document.getElementById('nav-dashboard').classList.remove('active');
-            document.getElementById('nav-profile').classList.remove('active');
-
-            document.getElementById(`tab-${tabId}`).style.display = 'block';
-            document.getElementById(`nav-${tabId}`).classList.add('active');
-
-            if (tabId === 'dashboard') {
-                processAndCompileFinancialLayouts();
-            }
-        }
-
-        // Application Workspace Initialization
-        function bootMainApplicationWorkspace() {
-            navigateView('app');
-            document.getElementById('prof-op-name').value = localizedSystemData.profile.name;
-            document.getElementById('prof-op-email').value = localizedSystemData.profile.email;
-            
-            // Set default date picker to current local time tracking context
-            document.getElementById('tx-timestamp').value = new Date().toISOString().split('T')[0];
-            
-            switchTab('dashboard');
-        }
-
-        function synchronizeOperatorProfile(e) {
-            e.preventDefault();
-            localizedSystemData.profile.name = document.getElementById('prof-op-name').value;
-            localizedSystemData.profile.email = document.getElementById('prof-op-email').value;
-            commitToCacheMemory();
-            alert("System Operator Matrix parameters successfully synchronized across localized storage registers.");
-        }
-
-        // Timeline Interval Filter Configurator Logic
-        function setTimelineFilter(filterMode) {
-            activeTimelineFilterMode = filterMode;
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`filter-${filterMode}`).classList.add('active');
-            processAndCompileFinancialLayouts();
-        }
-
-        // Ingest Transaction Form Data Frame Controller
-        function commitNewRecord(e) {
-            e.preventDefault();
-            const type = document.getElementById('tx-flow-dimension').value;
-            const amount = parseFloat(document.getElementById('tx-asset-value').value);
-            const category = document.getElementById('tx-domain-cat').value;
-            const desc = document.getElementById('tx-spec-desc').value;
-            const date = document.getElementById('tx-timestamp').value;
-
-            localizedSystemData.ledger.unshift({
-                id: Date.now(),
-                date,
-                desc,
-                category,
-                type,
-                amount
-            });
-
-            commitToCacheMemory();
-            processAndCompileFinancialLayouts();
-            
-            document.getElementById('tx-asset-value').value = '';
-            document.getElementById('tx-spec-desc').value = '';
-        }
-
-        function wipeDatabaseDefaults() {
-            if (confirm("Execute global architectural clean wipe? All customized records will clear.")) {
-                localizedSystemData = JSON.parse(JSON.stringify(frameworkDataSeeds));
-                commitToCacheMemory();
-                processAndCompileFinancialLayouts();
-            }
-        }
-
-        // ==================== FINANCIAL MATH COMPUTATION & TIME WINDOW FILTER ENGINE ====================
-        function processAndCompileFinancialLayouts() {
-            let totalIncome = 0;
-            let totalExpense = 0;
-            let barChartCategoryMap = { Food: 0, Rent: 0, Transport: 0, Leisure: 0, Stipend: 0 };
-
-            const targetTableBody = document.getElementById('injected-table-rows');
-            targetTableBody.innerHTML = '';
-
-            const today = new Date();
-
-            // Loop and compile records across validation windows
-            localizedSystemData.ledger.forEach(item => {
-                const itemDate = new Date(item.date);
-                let fallsInTimeline = true;
-
-                // Time window calculations
-                if (activeTimelineFilterMode === 'weekly') {
-                    const oneWeekAgo = new Date();
-                    oneWeekAgo.setDate(today.getDate() - 7);
-                    fallsInTimeline = (itemDate >= oneWeekAgo && itemDate <= today);
-                } else if (activeTimelineFilterMode === 'monthly') {
-                    const oneMonthAgo = new Date();
-                    oneMonthAgo.setMonth(today.getMonth() - 1);
-                    fallsInTimeline = (itemDate >= oneMonthAgo && itemDate <= today);
-                }
-
-                if (!fallsInTimeline) return;
-
-                // Accumulate calculations
-                if (item.type === 'income') {
-                    totalIncome += item.amount;
-                } else {
-                    totalExpense += item.amount;
-                    barChartCategoryMap[item.category] = (barChartCategoryMap[item.category] || 0) + item.amount;
-                }
-
-                // Inject data values into spreadsheet logs viewport UI rows
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td style="color:var(--neon-cyan); font-family:monospace;">${item.date}</td>
-                    <td><b>${item.desc}</b></td>
-                    <td><span style="font-size:12px; background:rgba(255,255,255,0.04); padding:4px 8px; border-radius:6px; border:1px solid var(--border-glow);">${item.category}</span></td>
-                    <td><span class="badge ${item.type === 'income' ? 'badge-in' : 'badge-out'}">${item.type}</span></td>
-                    <td style="text-align:right; font-weight:700; color:${item.type === 'income' ? 'var(--neon-green)' : 'var(--text-primary)'}">
-                        ${item.type === 'income' ? '+' : '-'}$${item.amount.toFixed(2)}
-                    </td>
-                `;
-                targetTableBody.appendChild(row);
-            });
-
-            // Post metrics calculation display configurations
-            document.getElementById('render-inflow-txt').innerText = `$${totalIncome.toFixed(2)}`;
-            document.getElementById('render-outflow-txt').innerText = `$${totalExpense.toFixed(2)}`;
-            
-            const workingNetPool = totalIncome - totalExpense;
-            const balanceEl = document.getElementById('render-balance-txt');
-            balanceEl.innerText = `${workingNetPool < 0 ? '-' : ''}$${Math.abs(workingNetPool).toFixed(2)}`;
-            balanceEl.style.color = workingNetPool < 0 ? 'var(--neon-rose)' : 'var(--neon-cyan)';
-
-            // Re-render Chart.js bar graphing elements inside virtual frame context
-            if (activeChartPipeline) {
-                activeChartPipeline.destroy();
-            }
-
-            const canvasContext = document.getElementById('analytical-canvas-frame').getContext('2d');
-            activeChartPipeline = new Chart(canvasContext, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(barChartCategoryMap),
-                    datasets: [{
-                        label: 'Categorical Burden ($)',
-                        data: Object.values(barChartCategoryMap),
-                        backgroundColor: [
-                            'rgba(244, 63, 94, 0.65)',  // Neon Rose
-                            'rgba(59, 130, 246, 0.65)', // Neon Blue
-                            'rgba(6, 182, 212, 0.65)',  // Neon Cyan
-                            'rgba(234, 179, 8, 0.65)',  // Yellow Accent
-                            'rgba(168, 85, 247, 0.65)'  // Purple Accent
-                        ],
-                        borderColor: ['#f43f5e', '#3b82f6', '#06b6d4', '#eab308', '#a855f7'],
-                        borderWidth: 1,
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { labels: { color: '#94a3b8' } }
-                    },
-                    scales: {
-                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
-                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' }, beginAtZero: true }
-                    }
-                }
-            });
-        }
-
-        // ==================== ADVANCED DATA EXPORT PATTERN (CSV GENERATION) ====================
-        function exportLedgerToCSV() {
-            if (localizedSystemData.ledger.length === 0) {
-                alert("No database records present to convert into standard CSV sheets.");
-                return;
-            }
-
-            // Define standard array structural headers
-            let csvContentArray = ["Date,Description,Category,Flow Type,Amount ($)"];
-
-            // Loop operational elements and format text entries row structural sequences
-            localizedSystemData.ledger.forEach(item => {
-                // Remove commas from descriptions to ensure clean delimiter slicing
-                const secureDesc = item.desc.replace(/,/g, " "); 
-                const lineRow = `"${item.date}","${secureDesc}","${item.category}","${item.type}",${item.amount.toFixed(2)}`;
-                csvContentArray.push(lineRow);
-            });
-
-            // Convert string layout schema structures and execute download anchor click pipelines
-            const massiveStringContent = csvContentArray.join("\n");
-            const structuralBlob = new Blob([massiveStringContent], { type: 'text/csv;charset=utf-8;' });
-            const temporaryAnchor = document.createElement("a");
-            
-            const downloadableUrl = URL.createObjectURL(structuralBlob);
-            temporaryAnchor.setAttribute("href", downloadableUrl);
-            temporaryAnchor.setAttribute("download", `XpenseAI_Ledger_Export_${new Date().toISOString().split('T')[0]}.csv`);
-            temporaryAnchor.style.visibility = 'hidden';
-            
-            document.body.appendChild(temporaryAnchor);
-            temporaryAnchor.click();
-            document.body.removeChild(temporaryAnchor);
+            // Core Page Relocation Route Execution Command
+            window.location.href = "dashboard.html";
         }
     </script>
 </body>
