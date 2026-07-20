@@ -1,0 +1,44 @@
+/* ==================== VELOFIN CORE CONFIGURATION RULES ==================== */
+:root {
+    --bg-deep: #070a12;
+    --panel-glass: rgba(15, 23, 42, 0.55);
+    --border-glow: rgba(59, 130, 246, 0.18);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --neon-blue: #3b82f6;
+    --neon-cyan: #06b6d4;
+    --neon-green: #10b981;
+    --neon-rose: #f43f5e;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
+html, body { background-color: var(--bg-deep); color: var(--text-main); height: 100vh; width: 100vw; overflow: hidden; }
+
+/* Structural Cards Design Layout */
+.glass-panel {
+    background: var(--panel-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-glow);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Form inputs & selection nodes configuration styles */
+.input-block { margin-bottom: 18px; }
+.input-block label { display: block; margin-bottom: 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+.input-block input, .input-block select {
+    width: 100%; padding: 12px 16px; background: rgba(10, 15, 28, 0.6); border: 1px solid var(--border-glow);
+    border-radius: 8px; color: white; font-size: 14px; outline: none; transition: all 0.2s;
+}
+.input-block input:focus, .input-block select:focus { border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(6, 182, 212, 0.15); }
+
+/* Interactive Action Buttons styling */
+.action-btn {
+    background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan));
+    color: white; padding: 14px 36px; border-radius: 10px; font-weight: 700; font-size: 15px;
+    border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+    box-shadow: 0 4px 20px rgba(6, 182, 212, 0.35); transition: all 0.25s ease;
+}
+.action-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(6, 182, 212, 0.5); }

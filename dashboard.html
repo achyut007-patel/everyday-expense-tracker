@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeloFin // Executive Financial Command Console</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .app-layout { display: flex; height: 100vh; width: 100vw; }
+        .nav-sidebar { width: 250px; background: rgba(9, 12, 22, 0.85); border-right: 1px solid var(--border-glow); display: flex; flex-direction: column; padding: 24px; }
+        .workspace-scroller { flex: 1; height: 100vh; overflow-y: scroll; padding: 40px; }
+        .tab-window { display: none; }
+        .tab-window.active { display: block; }
+        .cards-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 32px; }
+        .metric-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; }
+        .card-green::before { background: var(--neon-green); }
+        .card-rose::before { background: var(--neon-rose); }
+        .card-blue::before { background: var(--neon-blue); }
+        .split-workspace { display: grid; grid-template-columns: 1fr 1.8fr; gap: 32px; margin-bottom: 32px; }
+        @media (max-width: 1024px) { .split-workspace { grid-template-columns: 1fr; } }
+        .table-scroller { width: 100%; overflow-x: auto; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 14px; color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 1px solid var(--border-glow); }
+        td { padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.01); font-size: 14px; }
+        .badge { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .badge-in { background: rgba(16, 185, 129, 0.12); color: var(--neon-green); }
+        .badge-out { background: rgba(244, 63, 94, 0.12); color: var(--neon-rose); }
+    </style>
+</head>
+<body>
+
+    <div class="app-layout">
+        <!-- Sidebar Navigation Controls Menu -->
+        <aside class="nav-sidebar">
+            <div style="font-size:22px; font-weight:900; color:white; margin-bottom:35px; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-network-wired" style="color:var(--neon-cyan);"></i><span>VeloFin</span>
+            </div>
+            <ul style="list-style:none; flex:1;">
+                <li><button onclick="toggleTabPanel('dashboard')" id="nav-btn-dashboard" class="link-btn active" style="width:100%; padding:12px; background:transparent; border:none; text-align:left; color:white; font-size:14px; cursor:pointer; display:flex; align-items:center; gap:12px;"><i class="fa-solid fa-chart-pie"></i>Ledger Control</button></li>
+                <li><button onclick="toggleTabPanel('profile')" id="nav-btn-profile" class="link-btn" style="width:100%; padding:12px; background:transparent; border:none; text-align:left; color:var(--text-muted); font-size:14px; cursor:pointer; display:flex; align-items:center; gap:12px;"><i class="fa-solid fa-screwdriver-wrench"></i>Profile Matrix</button></li>
+            </ul>
+            <!-- REDIRECT BACK OUT ROUTINE -->
+            <button onclick="executeLogoutRedirect()" style="background:rgba(244, 63, 94, 0.08); color:var(--neon-rose); border:1px solid rgba(244, 63, 94, 0.15); padding:12px; border-radius:8px; cursor:pointer; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px;"><i class="fa-solid fa-power-off"></i>Logout System</button>
+        </aside>
+
+        <!-- Right Main Dashboard Scroller Content -->
+        <div class="workspace-scroller">
+            
+            <div id="tab-dashboard" class="tab-window active">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+                    <div>
+                        <h2 style="font-size:26px; font-weight:800;">Analytical Console Log</h2>
+                        <p style="color:var(--text-muted); font-size:13px; margin-top:2px;">Real-time asset streams active</p>
+                    </div>
+                    <div style="display:flex; background:rgba(10, 15, 30, 0.9); border:1px solid var(--border-glow); padding:4px; border-radius:8px;">
+                        <button onclick="setTimelineFilterMode('all')" id="range-all" class="range-btn active" style="background:var(--neon-blue); border:none; color:white; padding:6px 14px; font-size:12px; font-weight:600; border-radius:6px; cursor:pointer;">All-Time</button>
+                        <button onclick="setTimelineFilterMode('weekly')" id="range-weekly" class="range-btn" style="background:transparent; border:none; color:var(--text-muted); padding:6px 14px; font-size:12px; font-weight:600; border-radius:6px; cursor:pointer;">Weekly</button>
+                        <button onclick="setTimelineFilterMode('monthly')" id="range-monthly" class="range-btn" style="background:transparent; border:none; color:var(--text-muted); padding:6px 14px; font-size:12px; font-weight:600; border-radius:6px; cursor:pointer;">Monthly</button>
+                    </div>
+                </div>
+
+                <div class="cards-dashboard-grid">
+                    <div class="glass-panel metric-card card-green" style="position:relative;">
+                        <p style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Inflow Credits</p>
+                        <h3 id="txt-inflow-render" style="font-size:26px; font-weight:800; margin-top:6px;">$0.00</h3>
+                    </div>
+                    <div class="glass-panel metric-card card-rose" style="position:relative;">
+                        <p style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Outflow Debits</p>
+                        <h3 id="txt-outflow-render" style="font-size:26px; font-weight:800; margin-top:6px;">$0.00</h3>
+                    </div>
+                    <div class="glass-panel metric-card card-blue" style="position:relative;">
+                        <p style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Liquidity Index</p>
+                        <h3 id="txt-balance-render" style="font-size:26px; font-weight:800; margin-top:6px;">$0.00</h3>
+                    </div>
+                </div>
+
+                <div class="split-workspace">
+                    <div class="glass-panel">
+                        <h4 style="font-size:14px; font-weight:700; text-transform:uppercase; border-bottom:1px solid var(--border-glow); padding-bottom:10px; margin-bottom:18px;">Append Data Stream</h4>
+                        <form onsubmit="injectRecordIntoLedger(event)">
+                            <div class="input-block">
+                                <label>Flow Dimension</label>
+                                <select id="input-flow-dim">
+                                    <option value="expense">Outflow (-) Expense Debits</option>
+                                    <option value="income">Inflow (+) Income Credits</option>
+                                </select>
+                            </div>
+                            <div class="input-block">
+                                <label>Value Scale Weight ($)</label>
+                                <input type="number" step="0.01" id="input-asset-val" placeholder="0.00" required>
+                            </div>
+                            <div class="input-block">
+                                <label>Operational Classification</label>
+                                <select id="input-domain-cat">
+                                    <option value="Food">Nutrition & Catering</option>
+                                    <option value="Rent">Facilities & Rent</option>
+                                    <option value="Transport">Transit Logistics</option>
+                                    <option value="Leisure">Recreational Media</option>
+                                    <option value="Stipend">Corporate Grants/Salary</option>
+                                </select>
+                            </div>
+                            <div class="input-block">
+                                <label>Data Specifications Memo</label>
+                                <input type="text" id="input-spec-memo" placeholder="Asset references..." required>
+                            </div>
+                            <div class="input-block">
+                                <label>Logging Calendar Timestamp</label>
+                                <input type="date" id="input-date-val" required>
+                            </div>
+                            <button type="submit" class="action-btn" style="width:100%; padding:11px; font-size:13px;">Inject Into System Ledger</button>
+                        </form>
+                    </div>
+
+                    <div class="glass-panel" style="display:flex; flex-direction:column;">
+                        <h4 style="font-size:14px; font-weight:700; text-transform:uppercase; border-bottom:1px solid var(--border-glow); padding-bottom:10px; margin-bottom:18px;">Categorical Allocation Metrics</h4>
+                        <div style="position:relative; flex:1; min-height:260px;"><canvas id="canvas-chart-engine"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="glass-panel">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-glow); padding-bottom:12px; gap:20px; margin-bottom:10px;">
+                        <h4 style="font-size:14px; font-weight:700; text-transform:uppercase; margin:0; flex:1;">Active Database Log Cache</h4>
+                        <button onclick="downloadLedgerSpreadsheet()" style="background:var(--neon-cyan); color:#050b14; border:none; padding:10px 16px; font-weight:700; font-size:12px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:8px;"><i class="fa-solid fa-file-excel"></i>Export Sheet (.CSV)</button>
+                        <button onclick="wipeDatabaseCacheDefaults()" style="background:transparent; color:var(--neon-rose); border:none; font-size:11px; font-weight:700; cursor:pointer; text-transform:uppercase;">Purge Cache</button>
+                    </div>
+                    <div class="table-scroller">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Specification Description</th>
+                                    <th>Domain Core</th>
+                                    <th>Flow Type</th>
+                                    <th style="text-align:right;">Asset Value Weight</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-injector"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-profile" class="tab-window">
+                <div class="glass-panel" style="max-width:600px;">
+                    <h3 style="font-size:17px; font-weight:800; border-bottom:1px solid var(--border-glow); padding-bottom:12px; margin-bottom:20px;">Operator Verification Node</h3>
+                    <form onsubmit="updateOperatorProfileMatrix(event)">
+                        <div class="input-block">
+                            <label>Assigned Lead Operator Signature</label>
+                            <input type="text" id="field-op-name" required>
+                        </div>
+                        <div class="input-block">
+                            <label>Secure Network Link (Email)</label>
+                            <input type="email" id="field-op-email" required>
+                        </div>
+                        <button type="submit" class="action-btn" style="font-size:13px; padding:11px 24px;">Synchronize Operator Records</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- UTILITY APPLICATION JAVASCRIPT LOGIC -->
+    <script>
+        let globalChartPipeInstance = null;
+        let activeTimeWindowFilter = 'all';
+
+        const databaseSeedTemplates = {
+            profile: { name: "System Examiner Node", email: "student@college.edu" },
+            ledger: [
+                { id: 301, date: "2026-07-18", desc: "Technical Project Stipend", category: "Stipend", type: "income", amount: 2800.00 },
+                { id: 302, date: "2026-07-16", desc: "Main Campus Facility Housing", category: "Rent", type: "expense", amount: 550.00 },
+                { id: 303, date: "2026-07-14", desc: "Optical Grid Data Infrastructure", category: "Rent", type: "expense", amount: 120.00 },
+                { id: 304, date: "2026-07-10", desc: "Lab Team Subsistence Nutrition", category: "Food", type: "expense", amount: 48.50 }
+            ]
+        };
+
+        let volatileSystemMemory = JSON.parse(localStorage.getItem('isolated_cyber_vault')) || databaseSeedTemplates;
+
+        function updateCacheMemoryPipeline() { localStorage.setItem('isolated_cyber_vault', JSON.stringify(volatileSystemMemory)); }
+        function executeLogoutRedirect() { window.location.href = "index.html"; }
+
+        function toggleTabPanel(tabWindowId) {
+            document.getElementById('tab-dashboard').style.display = 'none';
+            document.getElementById('tab-profile').style.display = 'none';
+            document.getElementById(`tab-${tabWindowId}`).style.display = 'block';
+            if (tabWindowId === 'dashboard') computeAndRenderFinancialMetrics();
+        }
+
+        function setTimelineFilterMode(windowMode) {
+            activeTimeWindowFilter = windowMode;
+            document.querySelectorAll('.range-btn').forEach(btn => btn.style.background = 'transparent');
+            document.getElementById(`range-${windowMode}`).style.background = 'var(--neon-blue)';
+            computeAndRenderFinancialMetrics();
+        }
+
+        function injectRecordIntoLedger(e) {
+            e.preventDefault();
+            volatileSystemMemory.ledger.unshift({
+                id: Date.now(),
+                date: document.getElementById('input-date-val').value,
+                desc: document.getElementById('input-spec-memo').value,
+                category: document.getElementById('input-domain-cat').value,
+                type: document.getElementById('input-flow-dim').value,
+                amount: parseFloat(document.getElementById('input-asset-val').value)
+            });
+            updateCacheMemoryPipeline();
+            computeAndRenderFinancialMetrics();
+            document.getElementById('input-asset-val').value = '';
+            document.getElementById('input-spec-memo').value = '';
+        }
+
+        function computeAndRenderFinancialMetrics() {
+            let runningSumInflow = 0, runningSumOutflow = 0;
+            let allocationGraphDataMap = { Food: 0, Rent: 0, Transport: 0, Leisure: 0, Stipend: 0 };
+            const displayTableContainer = document.getElementById('table-body-injector');
+            displayTableContainer.innerHTML = '';
+
+            volatileSystemMemory.ledger.forEach(record => {
+                const checkDateObj = new Date(record.date);
+                let insideTimelineFrame = true;
+                if (activeTimeWindowFilter === 'weekly') {
+                    const limit = new Date(); limit.setDate(new Date().getDate() - 7);
+                    insideTimelineFrame = (checkDateObj >= limit);
+                } else if (activeTimeWindowFilter === 'monthly') {
+                    const limit = new Date(); limit.setMonth(new Date().getMonth() - 1);
+                    insideTimelineFrame = (checkDateObj >= limit);
+                }
+                if (!insideTimelineFrame) return;
+
+                if (record.type === 'income') runningSumInflow += record.amount;
+                else { runningSumOutflow += record.amount; allocationGraphDataMap[record.category] += record.amount; }
+
+                const tableRowElement = document.createElement('tr');
+                tableRowElement.innerHTML = `
+                    <td style="color:var(--neon-cyan); font-family:monospace; font-weight:600;">${record.date}</td>
+                    <td><b>${record.desc}</b></td>
+                    <td><span style="font-size:12px; background:rgba(255,255,255,0.03); padding:4px 8px; border-radius:4px; border:1px solid var(--border-glow);">${record.category}</span></td>
+                    <td><span class="badge ${record.type === 'income' ? 'badge-in' : 'badge-out'}">${record.type}</span></td>
+                    <td style="text-align:right; font-weight:700; color:${record.type === 'income' ? 'var(--neon-green)' : 'var(--text-main)'}">$${record.amount.toFixed(2)}</td>
+                `;
+                displayTableContainer.appendChild(tableRowElement);
+            });
+
+            document.getElementById('txt-inflow-render').innerText = `$${runningSumInflow.toFixed(2)}`;
+            document.getElementById('txt-outflow-render').innerText = `$${runningSumOutflow.toFixed(2)}`;
+            document.getElementById('txt-balance-render').innerText = `$${(runningSumInflow - runningSumOutflow).toFixed(2)}`;
+
+            if (globalChartPipeInstance) globalChartPipeInstance.destroy();
+            globalChartPipeInstance = new Chart(document.getElementById('canvas-chart-engine').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(allocationGraphDataMap),
+                    datasets: [{
+                        label: 'Allocation Outflow ($)',
+                        data: Object.values(allocationGraphDataMap),
+                        backgroundColor: ['#f43f5e', '#3b82f6', '#06b6d4', '#eab308', '#a855f7'],
+                        borderRadius: 5
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function downloadLedgerSpreadsheet() {
+            let csv = ["Date,Description,Category,Flow Type,Amount ($)"];
+            volatileSystemMemory.ledger.forEach(e => csv.push(`"${e.date}","${e.desc}","${e.category}","${e.type}",${e.amount}`));
+            const blob = new Blob([csv.join("\n")], { type: 'text/csv' });
+            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = 'VeloFin_Ledger.csv'; a.click();
+        }
+
+        function wipeDatabaseCacheDefaults() { volatileSystemMemory = databaseSeedTemplates; updateCacheMemoryPipeline(); computeAndRenderFinancialMetrics(); }
+        window.onload = () => {
+            document.getElementById('field-op-name').value = volatileSystemMemory.profile.name;
+            document.getElementById('field-op-email').value = volatileSystemMemory.profile.email;
+            document.getElementById('input-date-val').value = new Date().toISOString().split('T')[0];
+            computeAndRenderFinancialMetrics();
+        };
+    </script>
+</body>
+</html>
